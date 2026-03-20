@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Markedsanalyse — Total Betong</title>
+<style>
+:root { --brand:#E87722; --dark:#1a1a1a; --bg:#f3f2ee; --card:#fff; --border:#e2e0d6; --text:#0f172a; --muted:#64748b; --light:#94a3b8; --subtle:#fafaf7; --info:#f8f7f4; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+a:hover{opacity:.8}
+.header{background:var(--dark);padding:10px 20px;border-bottom:4px solid var(--brand)}
+.header-inner{max-width:1140px;margin:0 auto;display:flex;align-items:center;gap:14px}
+.header h1{font-size:17px;font-weight:700;color:#f8fafc}
+.header p{font-size:10px;color:#999;letter-spacing:1.5px;text-transform:uppercase}
+.container{max-width:1140px;margin:0 auto;padding:0 20px}
+.api-bar{display:flex;align-items:center;gap:8px;margin:12px 0 6px;padding:8px 12px;background:#fff3e0;border:1px solid #ffd699;border-radius:8px;font-size:12px}
+.api-bar input{flex:1;border:1px solid #ddd;border-radius:6px;padding:6px 10px;font-size:12px;font-family:monospace}
+.api-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.search-box{display:flex;align-items:center;gap:8px;background:#fff;border-radius:10px;border:2px solid #ddd;padding:3px 3px 3px 14px;margin-top:8px}
+.search-box input{flex:1;border:none;outline:none;font-size:14px;padding:9px 4px;font-family:inherit;background:transparent}
+.search-box button{background:var(--dark);color:var(--brand);border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.search-box button:disabled{background:#aaa;cursor:default}
+.report-title{display:flex;justify-content:space-between;align-items:flex-end;margin:8px 0;padding-bottom:8px;border-bottom:2px solid var(--dark)}
+.badge{background:#ecfdf5;color:#047857;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.progress{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.progress-track{flex:1;height:4px;background:#ddd;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),#10b981);border-radius:2px;transition:width .5s}
+.layout{display:flex;background:#fff;border-radius:12px;border:1px solid #ddd;overflow:hidden;min-height:480px}
+.sidebar{width:200px;border-right:1px solid #eee;background:var(--subtle);padding:4px 0;flex-shrink:0;overflow-y:auto}
+.nav-btn{display:flex;align-items:center;gap:6px;width:100%;padding:7px 10px;border:none;border-left:3px solid transparent;background:transparent;cursor:pointer;font-family:inherit;text-align:left;font-size:10px;color:var(--muted)}
+.nav-btn.active{background:#f0efea;font-weight:600;color:var(--text)}
+.nav-divider{border-top:1px solid var(--border);margin:3px 0}
+.content{flex:1;display:flex;flex-direction:column;min-width:0}
+.content-header{display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid #eee;gap:6px}
+.nav-arrow{padding:4px 10px;background:#f0efea;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500}
+.nav-arrow:disabled{opacity:.3;cursor:default}
+.content-title{flex:1;font-size:13px;font-weight:700;text-align:center}
+.content-body{padding:12px 16px 16px;flex:1;overflow-y:auto}
+.bottom-bar{display:flex;justify-content:center;gap:8px;padding:8px 14px;border-top:1px solid #eee;background:var(--subtle)}
+.sm-btn{padding:5px 12px;background:var(--dark);color:var(--brand);border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
+.retry-btn{padding:4px 10px;background:#f0efea;border:1px solid #ddd;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;display:flex;align-items:center;gap:4px}
+.spinner{display:inline-block;border:2px solid #ddd;border-top-color:var(--dark);border-radius:50%;animation:spin .8s linear infinite}
+.loading-center{text-align:center;padding:36px 0}
+.loading-center .spinner{width:22px;height:22px;border-width:3px;margin-bottom:8px}
+.loading-text{font-size:12px;color:var(--light);animation:pulse 2s infinite}
+.info-box{font-size:12px;color:#475569;margin-bottom:10px;padding:7px 11px;background:var(--info);border-radius:6px;line-height:1.5}
+.mini-card{padding:6px 9px;background:var(--subtle);border-radius:6px;margin-bottom:4px}
+.mini-card .label{font-size:9px;color:var(--light);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px}
+.mini-card .value{font-size:11px;color:var(--text);font-weight:500;line-height:1.4}
+table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px}
+th{text-align:left;padding:5px 6px;background:var(--info);color:var(--muted);font-weight:600;border-bottom:2px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.4px}
+td{padding:5px 6px;border-bottom:1px solid #f1f0eb;color:#334155}
+tr:nth-child(even){background:var(--subtle)}
+.kv-row{display:flex;padding:4px 0;border-bottom:1px solid #f1f0eb}
+.kv-label{width:125px;font-size:11px;color:var(--muted);font-weight:500;flex-shrink:0}
+.kv-value{font-size:12px;color:var(--text);font-weight:500}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.error-box{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:14px;color:#991b1b;font-size:12px}
+.error-box .retry-inline{margin-top:10px;padding:6px 14px;background:var(--dark);color:var(--brand);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+.sum-box{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px}
+.sum-box .stitle{font-size:11px;font-weight:700;margin-bottom:5px}
+.sum-box .item{font-size:11px;color:#475569;padding:3px 0;border-bottom:1px solid #f1f0eb;line-height:1.4}
+.sum-box .item:last-child{border-bottom:none}
+.chip{display:inline-block;padding:3px 8px;border-radius:12px;font-size:10px;margin:2px}
+.chip-blue{background:#dbeafe;color:#1e40af}
+.chip-red{background:#fee2e2;color:#991b1b}
+.action-btn{flex:0 1 200px;padding:14px 16px;background:var(--dark);color:#f8fafc;border:none;border-radius:10px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px}
+.action-btn .atitle{font-weight:700;font-size:13px}
+.action-btn .asub{font-size:10px;color:var(--light)}
+.bp-step{display:flex;gap:10px;margin-bottom:12px;padding:10px 12px;background:#fff;border-radius:8px;border:1px solid var(--border)}
+.bp-icon{width:36px;height:36px;border-radius:8px;background:#fefce8;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.bp-title{font-size:12px;font-weight:700;margin-bottom:2px}
+.bp-desc{font-size:11px;color:#475569;line-height:1.5;margin-bottom:3px}
+.bp-tip{font-size:10px;color:#92400e;font-style:italic;background:#fefce8;padding:3px 8px;border-radius:4px;display:inline-block}
+.contact-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px;margin-bottom:14px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:999}
+.modal{background:#fff;border-radius:12px;padding:24px;max-width:580px;width:92%;max-height:80vh;overflow:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.modal-close{background:#f1f0eb;border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:15px}
+.modal-content{font-size:13px;color:#334155;line-height:1.7;white-space:pre-wrap;background:var(--info);padding:16px;border-radius:8px}
+.modal-copy{margin-top:12px;padding:8px 16px;background:var(--dark);color:var(--brand);border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.history-section{border-top:2px solid var(--border);padding-top:16px;margin-top:16px}
+.history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.history-card{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fff;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s}
+.history-card.active{border:2px solid var(--brand);background:#fef9ee;cursor:default}
+.history-card .icon-box{width:36px;height:36px;border-radius:8px;background:#f0efea;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.history-card.active .icon-box{background:var(--brand)}
+.history-card .hname{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-card .hdate{font-size:10px;color:var(--light)}
+.history-delete{background:none;border:none;cursor:pointer;font-size:14px;color:#cbd5e1;padding:2px 4px}
+.disclaimer{margin-top:10px;padding:6px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;font-size:10px;color:#713f12}
+</style>
+</head>
+<body>
+
+<div class="header"><div class="header-inner">
+  <svg width="38" height="38" viewBox="0 0 100 100" style="border-radius:6px;flex-shrink:0"><rect width="100" height="100" fill="#E87722"/><rect x="0" y="0" width="100" height="36" fill="#1a1a1a"/><rect x="30" y="0" width="40" height="100" fill="#1a1a1a"/></svg>
+  <div><h1>Markedsanalyse</h1><p>Total Betong · Kundeinnsikt & Relasjonsbygging</p></div>
+</div></div>
+
+<div class="container">
+  <div class="api-bar">
+    <div class="api-dot" id="apiStatus" style="background:#ef4444"></div>
+    <span>API-nøkkel:</span>
+    <input type="password" id="apiKey" placeholder="sk-ant-api03-..."/>
+    <button onclick="saveApiKey()" style="padding:4px 12px;border:none;border-radius:4px;background:var(--dark);color:var(--brand);font-size:11px;font-weight:600;cursor:pointer">Lagre</button>
+  </div>
+  <div style="font-size:10px;color:var(--light);margin-bottom:4px">Nøkkelen lagres kun lokalt. Hent fra <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:var(--brand)">console.anthropic.com</a></div>
+  <div class="search-box">
+    <span style="font-size:15px">🔍</span>
+    <input type="text" id="searchInput" placeholder='Kundenavn, f.eks. "Kruse Smith", "K2 Stavanger"' onkeydown="if(event.key==='Enter')startSearch()"/>
+    <button id="searchBtn" onclick="startSearch()">Generer rapport</button>
+  </div>
+</div>
+
+<div class="container" id="reportArea" style="display:none;padding-top:8px;padding-bottom:40px">
+  <div class="report-title">
+    <div>
+      <div style="font-size:10px;font-weight:600;color:var(--brand);letter-spacing:2px;text-transform:uppercase">MARKEDSANALYSE</div>
+      <div style="font-size:22px;font-weight:800" id="reportName"></div>
+      <div style="font-size:10px;color:var(--light)" id="reportDate"></div>
+    </div>
+    <span class="badge" id="completeBadge" style="display:none">✓ Fullført</span>
+  </div>
+  <div class="progress"><div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div><span style="font-size:10px;color:var(--light)" id="progressText">0/10</span></div>
+  <div class="layout">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="content">
+      <div class="content-header">
+        <button class="nav-arrow" id="prevBtn" onclick="navPrev()">← Tilbake</button>
+        <div class="content-title" id="contentTitle"></div>
+        <button class="retry-btn" id="retryBtn" onclick="retryActive()" style="display:none">🔄 Prøv igjen</button>
+        <button class="nav-arrow" id="nextBtn" onclick="navNext()">Neste →</button>
+      </div>
+      <div class="content-body" id="contentBody"></div>
+      <div class="bottom-bar" id="bottomBar" style="display:none">
+        <button class="sm-btn" onclick="showModal('email')">✉️ E-post</button>
+        <button class="sm-btn" onclick="showModal('call')">📞 Ringemanus</button>
+        <button class="sm-btn" onclick="navigateTo('summary')">📌 Oppsummering</button>
+        <button class="sm-btn" onclick="navigateTo('bestpractice')">🤝 Beste praksis</button>
+      </div>
+    </div>
+  </div>
+  <div class="disclaimer">⚠ Automatisk generert fra offentlige kilder. Verifiser alltid mot Brønnøysundregistrene, proff.no og direkte kundekontakt.</div>
+</div>
+
+<div class="container" id="emptyState">
+  <div style="text-align:center;padding:50px 20px">
+    <svg width="64" height="64" viewBox="0 0 100 100" style="border-radius:12px;opacity:.7;margin-bottom:12px"><rect width="100" height="100" fill="#E87722"/><rect x="0" y="0" width="100" height="36" fill="#1a1a1a"/><rect x="30" y="0" width="40" height="100" fill="#1a1a1a"/></svg>
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">Klar til å analysere</div>
+    <div style="font-size:13px;color:var(--muted);max-width:450px;margin:0 auto 16px;line-height:1.5">Skriv inn kundenavn for komplett markedsanalyse med oppsummering, e-postutkast, ringemanus og beste praksis for relasjonsbygging.</div>
+  </div>
+</div>
+
+<div class="container" id="historyArea" style="padding-bottom:40px"></div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3 id="modalTitle"></h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-content" id="modalContent"></div>
+    <button class="modal-copy" id="copyBtn" onclick="copyModal()">📋 Kopier til utklippstavle</button>
+  </div>
+</div>
+
+<script>
+/* ═══════ STATE ═══════ */
+const S={customerName:'',results:{},statuses:{},summary:null,sumStatus:'idle',active:'profile',globalStatus:'idle',abortCtrl:null};
+const SECTIONS=[
+  {key:"profile",label:"Bedriftsprofil",icon:"🏢",color:"#3b82f6",prompt:n=>`Søk etter bedriftsinformasjon om "${n}" i Norge via proff.no. Returner KUN gyldig JSON uten markdown:\n{"org_nr":"","navn":"","stiftet":"","selskapsform":"","adresse":"","nace":"","ansatte":"","daglig_leder":"","styreleder":"","nettside":"","beskrivelse":"maks 2 setninger"}`},
+  {key:"owners",label:"Eierstruktur",icon:"🔗",color:"#8b5cf6",prompt:n=>`Søk etter eierstruktur for "${n}" i Norge. Returner KUN gyldig JSON:\n{"eiere":[{"navn":"","andel":"","type":"person/selskap"}],"morselskap":"","datterselskaper":[""],"konsern":"kort"}`},
+  {key:"financials",label:"Økonomi",icon:"📊",color:"#10b981",prompt:n=>`Søk GRUNDIG etter regnskapstall for "${n}" i Norge på proff.no. Hent driftsinntekter, driftsresultat, årsresultat, egenkapital for 3 siste år. ALLE felt MÅ fylles ut. Returner KUN gyldig JSON:\n{"aar":[{"aar":"2023","driftsinntekter":"","driftsresultat":"","aarsresultat":"","egenkapital":""},{"aar":"2022","driftsinntekter":"","driftsresultat":"","aarsresultat":"","egenkapital":""},{"aar":"2021","driftsinntekter":"","driftsresultat":"","aarsresultat":"","egenkapital":""}],"ansatte":"","vurdering":"2-3 setninger om økonomi"}`},
+  {key:"people",label:"Nøkkelpersoner",icon:"👤",color:"#E87722",prompt:n=>`Søk etter nøkkelpersoner hos "${n}" i Norge for bygg/eiendom. Returner KUN gyldig JSON:\n{"personer":[{"navn":"","stilling":"","relevans":"hvorfor viktig"}]}\nMaks 8.`},
+  {key:"properties",label:"Eiendommer",icon:"🏗️",color:"#ef4444",prompt:n=>`Søk etter eiendommer "${n}" eier i Norge. Returner KUN gyldig JSON:\n{"eiendommer":[{"adresse":"","type":"kontor/bolig/næring/tomt","info":"kort"}],"oppsummering":"kort"}`},
+  {key:"projects",label:"Prosjekter",icon:"📋",color:"#06b6d4",prompt:n=>`Søk etter byggeprosjekter for "${n}" i Norge. Både pågående og ferdigstilte. Returner KUN gyldig JSON:\n{"prosjekter":[{"navn":"","sted":"","type":"","status":"pågående/planlagt/ferdigstilt","aar":"","verdi":""}],"oppsummering":"kort"}`},
+  {key:"news",label:"Siste Nyheter",icon:"📰",color:"#ec4899",prompt:n=>`Søk etter nyheter om "${n}" i Norge siste 2 år. Inkluder ALLTID url. Returner KUN gyldig JSON:\n{"nyheter":[{"dato":"","tittel":"","kilde":"","url":"https://...","sammendrag":"1-2 setn"}],"hovedtrend":"kort"}`},
+  {key:"contracts",label:"Kontraktsmønster",icon:"📝",color:"#6366f1",prompt:n=>`Søk etter kontraktspraksis for "${n}" i Norge innen bygg. Returner KUN gyldig JSON:\n{"entrepriseform":"","bruker_anbud":"","tidligere_leverandorer":[{"navn":"","prosjekt":""}],"utvelgelse":"","anbudsprosess":"","tips":"2-3 tips","oppsummering":"kort"}`},
+  {key:"strategy",label:"Strategi",icon:"🎯",color:"#14b8a6",prompt:n=>`Analyser strategi for "${n}" i Norge. Returner KUN gyldig JSON:\n{"satsning":[""],"geografi":"","vekst":"","konkurrenter":[""],"posisjon":"","oppsummering":"kort"}`},
+  {key:"reputation",label:"Omdømme",icon:"💬",color:"#f97316",prompt:n=>`Søk etter omdømme til "${n}" i Norge. Returner KUN gyldig JSON:\n{"betalingsmoral":"god/middels/dårlig/ukjent","rettssaker":"","media":"positiv/nøytral/negativ/blandet","samarbeid":"","risiko":"lav/middels/høy","oppsummering":"kort"}`},
+];
+function getNavKeys(){const k=SECTIONS.map(s=>s.key);if(S.sumStatus!=='idle')k.push('summary');k.push('bestpractice');return k;}
+
+/* ═══════ API KEY ═══════ */
+function getApiKey(){return localStorage.getItem('tb_api_key')||'';}
+function saveApiKey(){localStorage.setItem('tb_api_key',document.getElementById('apiKey').value.trim());updateApiDot();}
+function updateApiDot(){const k=getApiKey();document.getElementById('apiKey').value=k;document.getElementById('apiStatus').style.background=k?'#10b981':'#ef4444';}
+
+/* ═══════ API ═══════ */
+async function callAPI(name,section,signal){
+  const k=getApiKey();if(!k)throw new Error("Mangler API-nøkkel");
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{"Content-Type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:section.prompt(name)}]})});
+  if(!r.ok)throw new Error("HTTP "+r.status);const d=await r.json();if(d.error)throw new Error(d.error.message);
+  const t=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text);if(!t.length)throw new Error("Tomt svar");return t.join("\n");
+}
+async function callSummary(name,all,signal){
+  const k=getApiKey();if(!k)throw new Error("Mangler API-nøkkel");
+  const ctx=Object.entries(all).map(([k,v])=>`[${k}]: ${(v||'').substring(0,600)}`).join("\n\n");
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",signal,headers:{"Content-Type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:3000,system:"Du returnerer ALLTID kun gyldig JSON. Ingen markdown. Strenger på én linje, bruk \\n for linjeskift.",messages:[{role:"user",content:`Lag oppsummering for Total Betong som vil bygge relasjon med "${name}". Vær KONKRET. Returner BARE JSON:\n{"profil":"2-3 setn","funn":["p1","p2","p3","p4","p5"],"muligheter":["m1","m2","m3"],"risiko":["r1","r2"],"kontakt_person":"hvem","samtale_tema":["t1","t2","t3","t4"],"unnga":["u1","u2"],"tidspunkt":"dag og tid","epost":"intro-epost norsk ~120 ord","telefon":"ringemanus norsk ~100 ord"}\n\nData:\n${ctx}`}]})});
+  if(!r.ok)throw new Error("HTTP "+r.status);const d=await r.json();if(d.error)throw new Error(d.error.message);
+  return(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+}
+
+/* ═══════ JSON PARSER ═══════ */
+function tryParse(text){
+  if(!text)return null;
+  try{return JSON.parse(text.trim())}catch{}
+  try{return JSON.parse(text.replace(/```json\s*/gi,"").replace(/```\s*/gi,"").trim())}catch{}
+  try{const s=text.indexOf("{"),e=text.lastIndexOf("}");if(s!==-1&&e>s)return JSON.parse(text.substring(s,e+1))}catch{}
+  try{const s=text.indexOf("{"),e=text.lastIndexOf("}");if(s!==-1&&e>s){let j=text.substring(s,e+1).replace(/,\s*}/g,"}").replace(/,\s*]/g,"]");return JSON.parse(j)}}catch{}
+  try{const s=text.indexOf("{"),e=text.lastIndexOf("}");if(s!==-1&&e>s){let j=text.substring(s,e+1).replace(/(?<!\\)\n/g,"\\n").replace(/,\s*}/g,"}").replace(/,\s*]/g,"]");return JSON.parse(j)}}catch{}
+  return null;
+}
+
+/* ═══════ RENDERERS ═══════ */
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function kv(l,v){return(!v||v==='ukjent'||v==='')?'':`<div class="kv-row"><div class="kv-label">${esc(l)}</div><div class="kv-value">${esc(v)}</div></div>`;}
+function mini(l,v,c='var(--muted)'){return(!v||v==='ukjent'||v==='')?'':`<div class="mini-card" style="border-left:3px solid ${c}"><div class="label">${esc(l)}</div><div class="value">${esc(v)}</div></div>`;}
+function infoBox(t,c){return t?`<div class="info-box" style="border-left:3px solid ${c}">${esc(t)}</div>`:'';}
+function tbl(h,rows){return`<table><thead><tr>${h.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c||'–'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;}
+function fallback(raw){return raw?'<div style="font-size:12px;line-height:1.6;color:#334155">'+esc(raw).replace(/\n/g,'<br>')+'</div>':'<div style="font-size:12px;color:var(--light);font-style:italic">Ingen data.</div>';}
+
+function renderSection(key,raw){
+  const d=tryParse(raw);
+  if(key==='profile'){if(!d)return fallback(raw);return infoBox(d.beskrivelse,'#3b82f6')+`<div class="grid-2"><div>${kv('Org.nr',d.org_nr)+kv('Stiftet',d.stiftet)+kv('Selskapsform',d.selskapsform)+kv('Adresse',d.adresse)+kv('NACE',d.nace)}</div><div>${kv('Ansatte',d.ansatte)+kv('Daglig leder',d.daglig_leder)+kv('Styreleder',d.styreleder)+kv('Nettside',d.nettside)}</div></div>`;}
+  if(key==='owners'){if(!d)return fallback(raw);let h=infoBox(d.konsern,'#8b5cf6');if(d.eiere?.length)h+=tbl(['Eier','Andel','Type'],d.eiere.map(e=>[esc(e.navn),esc(e.andel),esc(e.type)]));h+=`<div class="grid-2">${mini('Morselskap',d.morselskap,'#8b5cf6')}${d.datterselskaper?.filter(x=>x).length?mini('Datterselskaper',d.datterselskaper.filter(x=>x).join(', '),'#8b5cf6'):''}</div>`;return h;}
+  if(key==='financials'){const url=`https://www.google.com/search?q=site:proff.no+${encodeURIComponent(S.customerName)}+regnskap`;let h=`<div style="margin-bottom:10px"><a href="${url}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--dark);color:var(--brand);border-radius:6px;font-size:12px;font-weight:600;text-decoration:none">📊 Åpne regnskap på Proff.no ↗</a></div>`;if(!d)return h+fallback(raw);const has=d.aar?.some(a=>a.driftsinntekter||a.driftsresultat||a.aarsresultat||a.egenkapital);if(has)h+=tbl(['År','Driftsinntekter','Driftsresultat','Årsresultat','Egenkapital'],d.aar.map(a=>[esc(a.aar),esc(a.driftsinntekter)||'–',esc(a.driftsresultat)||'–',esc(a.aarsresultat)||'–',esc(a.egenkapital)||'–']));else h+='<div style="font-size:12px;color:var(--light);margin-bottom:8px">Ikke hentet automatisk. Bruk lenken over.</div>';if(d.ansatte)h+=`<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Ansatte: <strong>${esc(d.ansatte)}</strong></div>`;h+=infoBox(d.vurdering,'#10b981');return h;}
+  if(key==='people'){if(!d?.personer?.length)return fallback(raw);return tbl(['Navn','Stilling','Relevans'],d.personer.map(p=>[esc(p.navn),esc(p.stilling),esc(p.relevans)]));}
+  if(key==='properties'){if(!d)return fallback(raw);return infoBox(d.oppsummering,'#ef4444')+(d.eiendommer?.length?tbl(['Adresse','Type','Info'],d.eiendommer.map(e=>[esc(e.adresse),esc(e.type),esc(e.info)])):'');}
+  if(key==='projects'){if(!d)return fallback(raw);let h=infoBox(d.oppsummering,'#06b6d4');const p=d.prosjekter||[],act=p.filter(x=>x.status!=='ferdigstilt'&&x.status!=='ferdig'),done=p.filter(x=>x.status==='ferdigstilt'||x.status==='ferdig');if(act.length)h+=`<div style="font-size:11px;font-weight:700;color:#06b6d4;margin-bottom:4px;text-transform:uppercase">🔜 Pågående (${act.length})</div>`+tbl(['Prosjekt','Sted','Type','Status','År','Verdi'],act.map(x=>[esc(x.navn),esc(x.sted),esc(x.type),esc(x.status),esc(x.aar),esc(x.verdi)]));if(done.length)h+=`<div style="font-size:11px;font-weight:700;color:var(--light);margin:10px 0 4px;text-transform:uppercase">✅ Ferdigstilt (${done.length})</div>`+tbl(['Prosjekt','Sted','Type','År','Verdi'],done.map(x=>[esc(x.navn),esc(x.sted),esc(x.type),esc(x.aar),esc(x.verdi)]));if(!p.length)h+='<div style="font-size:12px;color:var(--light)">Ingen funnet.</div>';return h;}
+  if(key==='news'){if(!d)return fallback(raw);let h=infoBox(d.hovedtrend,'#ec4899');if(d.nyheter?.length)h+=`<table><thead><tr><th>Dato</th><th>Nyhet</th><th>Kilde</th></tr></thead><tbody>${d.nyheter.map((n,i)=>`<tr><td style="white-space:nowrap">${esc(n.dato)||'–'}</td><td>${esc(n.sammendrag||n.tittel)||'–'}</td><td>${n.url&&n.url.startsWith('http')?`<a href="${esc(n.url)}" target="_blank" style="color:#ec4899;text-decoration:none;font-weight:600">${esc(n.kilde)||'Les mer'} ↗</a>`:`<span style="color:var(--light)">${esc(n.kilde)||'–'}</span>`}</td></tr>`).join('')}</tbody></table>`;return h;}
+  if(key==='contracts'){if(!d)return fallback(raw);return`<div class="grid-2">${mini('Entrepriseform',d.entrepriseform,'#6366f1')}${mini('Bruker anbud',d.bruker_anbud,'#6366f1')}${mini('Utvelgelse',d.utvelgelse,'#6366f1')}${mini('Anbudsprosess',d.anbudsprosess,'#6366f1')}</div>${d.tidligere_leverandorer?.filter(e=>e?.navn).length?`<div style="font-size:10px;font-weight:700;color:#6366f1;margin-bottom:3px;text-transform:uppercase">Tidligere leverandører</div>`+tbl(['Entreprenør','Prosjekt'],d.tidligere_leverandorer.filter(e=>e?.navn).map(e=>[esc(e.navn),esc(e.prosjekt)])):''}`+mini('💡 Tips',d.tips,'#E87722')+infoBox(d.oppsummering,'#6366f1');}
+  if(key==='strategy'){if(!d)return fallback(raw);return`<div class="grid-2">${d.satsning?.filter(x=>x).length?mini('Satsning',d.satsning.filter(x=>x).join(', '),'#14b8a6'):''}${mini('Geografi',d.geografi,'#14b8a6')}${mini('Vekst',d.vekst,'#14b8a6')}${d.konkurrenter?.filter(x=>x).length?mini('Konkurrenter',d.konkurrenter.filter(x=>x).join(', '),'#14b8a6'):''}</div>`+mini('Posisjonering',d.posisjon,'#14b8a6')+infoBox(d.oppsummering,'#14b8a6');}
+  if(key==='reputation'){if(!d)return fallback(raw);const rc=d.risiko==='lav'?'#10b981':d.risiko==='høy'?'#ef4444':'#E87722';return`<div class="grid-3">${mini('Betalingsmoral',d.betalingsmoral,'#f97316')}${mini('Media',d.media,'#f97316')}${mini('Risiko',d.risiko,rc)}</div>${d.rettssaker&&d.rettssaker!=='ingen kjente'?mini('Rettssaker',d.rettssaker,'#f97316'):''}${d.samarbeid?mini('Samarbeid',d.samarbeid,'#f97316'):''}${infoBox(d.oppsummering,'#f97316')}`;}
+  return fallback(raw);
+}
+
+function renderSummary(){
+  const d=S.summary;if(!d)return'<div style="color:var(--light);font-size:12px">Kunne ikke genereres.</div>';
+  let h=infoBox(d.profil,'#E87722');
+  h+=`<div class="grid-3">${sumBox('Hovedfunn',d.funn,'🔍','#3b82f6')}${sumBox('Muligheter',d.muligheter,'💡','#10b981')}${sumBox('Risiko',d.risiko,'⚠️','#ef4444')}</div>`;
+  h+=`<div class="contact-box"><div style="font-size:12px;font-weight:700;color:#0369a1;margin-bottom:8px">📞 Kontaktstrategi</div><div class="grid-2">${mini('Kontakt først',d.kontakt_person,'#0ea5e9')}${mini('Beste tidspunkt',d.tidspunkt,'#0ea5e9')}</div>`;
+  if(d.samtale_tema?.length)h+=`<div style="margin-top:8px"><div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">Samtaletemaer</div><div>${d.samtale_tema.map(t=>`<span class="chip chip-blue">${esc(t)}</span>`).join('')}</div></div>`;
+  if(d.unnga?.length)h+=`<div style="margin-top:6px"><div style="font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:3px">Unngå</div><div>${d.unnga.map(t=>`<span class="chip chip-red">${esc(t)}</span>`).join('')}</div></div>`;
+  h+=`</div>`;
+  h+=`<div style="display:flex;justify-content:center;gap:14px;margin:20px 0;flex-wrap:wrap"><button class="action-btn" onclick="showModal('email')"><span style="font-size:22px">✉️</span><span class="atitle">E-postutkast</span><span class="asub">Tilpasset kunden</span></button><button class="action-btn" onclick="showModal('call')"><span style="font-size:22px">📞</span><span class="atitle">Ringemanus</span><span class="asub">Samtalepunkter</span></button><button class="action-btn" onclick="downloadWord()"><span style="font-size:22px">📄</span><span class="atitle">Last ned Word</span><span class="asub">Oppsummering som .doc</span></button></div>`;
+  return h;
+}
+
+function sumBox(title,items,icon,color){return`<div class="sum-box" style="border-top:3px solid ${color}"><div class="stitle">${icon} ${esc(title)}</div>${(items||[]).map(i=>`<div class="item">${esc(i)}</div>`).join('')}</div>`;}
+
+function renderBestPractice(){
+  const steps=[{n:"1",t:"Grundig research",d:"Les rapporten. Noter 3 ting å referere til.",icon:"📖",tip:"«Jeg så dere startet prosjektet X — spennende!»"},{n:"2",t:"Finn felles grunn",d:"Sjekk LinkedIn. Felles kontakter? Bygget i samme område?",icon:"🤝",tip:"Felles kontakter skaper tillit."},{n:"3",t:"Rett timing",d:"Ring tir–tor 09:00–11:00. Unngå man/fre.",icon:"⏰",tip:"Tidlig formiddag = mest mottagelige."},{n:"4",t:"Ring først",d:"Ring FØR e-post. Ikke selg — spør. Lytt 70%, snakk 30%.",icon:"📞",tip:"Mål: Få et møte."},{n:"5",t:"Oppfølging",d:"E-post innen 2 timer. Referer til samtalen.",icon:"✉️",tip:"Gjenta et poeng fra samtalen."},{n:"6",t:"Bygg relasjonen",d:"Uformelt møte innen 2 uker. Kaffe, lunsj.",icon:"☕",tip:"Del noe verdifullt."},{n:"7",t:"Langsiktig",d:"Påminnelse hver 3-4 uke. Del info uten å forvente noe.",icon:"📅",tip:"Vær den de tenker på når behovet oppstår."}];
+  let h=`<div class="info-box" style="border-left:3px solid var(--brand)">Relasjonsbygging er viktigst. Kunder velger den de <strong>stoler på</strong> — ikke den billigste.</div>`;
+  steps.forEach(s=>{h+=`<div class="bp-step"><div class="bp-icon">${s.icon}</div><div style="flex:1"><div class="bp-title">Steg ${s.n}: ${esc(s.t)}</div><div class="bp-desc">${esc(s.d)}</div><div class="bp-tip">💡 ${esc(s.tip)}</div></div></div>`;});
+  return h;
+}
+
+/* ═══════ WORD DOWNLOAD ═══════ */
+function downloadWord(){
+  const d=S.summary;if(!d)return;
+  const dt=new Date().toLocaleDateString("nb-NO",{day:"numeric",month:"long",year:"numeric"});
+  const li=(arr)=>(arr||[]).map(i=>`<li>${esc(i)}</li>`).join("");
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Markedsanalyse - ${esc(S.customerName)}</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page{size:A4;margin:2cm}body{font-family:Calibri,sans-serif;font-size:11pt;color:#1a1a2e;line-height:1.5}h1{font-size:22pt;color:#E87722;border-bottom:3px solid #E87722;padding-bottom:6pt}h2{font-size:14pt;margin-top:18pt;border-bottom:1px solid #ddd;padding-bottom:4pt}.meta{font-size:9pt;color:#888;margin-bottom:12pt}.profil{background:#fff8f0;border-left:4px solid #E87722;padding:8pt 12pt;margin-bottom:12pt}table{border-collapse:collapse;width:100%;margin:8pt 0}th{background:#f0f0f0;text-align:left;padding:6pt 8pt;border:1px solid #ccc;font-size:10pt}td{padding:6pt 8pt;border:1px solid #ddd;font-size:10pt}ul{margin:4pt 0;padding-left:20pt}li{margin-bottom:3pt}.highlight{background:#f0f9ff;border:1px solid #bae6fd;padding:8pt 12pt;margin:10pt 0}.email-box,.call-box{background:#fafafa;border:1px solid #ddd;padding:10pt 14pt;margin:8pt 0;white-space:pre-wrap}.footer{margin-top:20pt;padding-top:8pt;border-top:1px solid #ddd;font-size:8pt;color:#999}</style></head><body><h1>Markedsanalyse: ${esc(S.customerName)}</h1><div class="meta">Total Betong &middot; ${esc(dt)}</div>${d.profil?`<div class="profil">${esc(d.profil)}</div>`:''}<h2>Hovedfunn</h2><ul>${li(d.funn)}</ul><table><tr><th style="width:50%;border-top:3px solid #10b981">Muligheter</th><th style="border-top:3px solid #dc2626">Risiko</th></tr><tr><td><ul>${li(d.muligheter)}</ul></td><td><ul>${li(d.risiko)}</ul></td></tr></table><h2>Kontaktstrategi</h2><div class="highlight"><table style="border:none"><tr><td style="border:none;width:50%"><strong>Kontakt først:</strong><br>${esc(d.kontakt_person)}</td><td style="border:none"><strong>Tidspunkt:</strong><br>${esc(d.tidspunkt)}</td></tr></table>${d.samtale_tema?.length?`<p><strong>Samtaletemaer:</strong></p><ul>${li(d.samtale_tema)}</ul>`:''}${d.unnga?.length?`<p><strong>Unngå:</strong></p><ul>${li(d.unnga)}</ul>`:''}</div><h2>E-postutkast</h2><div class="email-box">${esc(d.epost||'').replace(/\\n/g,"\n")}</div><h2>Ringemanus</h2><div class="call-box">${esc(d.telefon||'').replace(/\\n/g,"\n")}</div><div class="footer">Automatisk generert av Total Betong Markedsanalyse. Verifiser mot prim&aelig;rkilder.</div></body></html>`;
+  const blob=new Blob([html],{type:"application/msword"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=`Markedsanalyse_${S.customerName.replace(/[^a-zA-ZæøåÆØÅ0-9 ]/g,'').replace(/\s+/g,'_')}.doc`;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+/* ═══════ UI UPDATE ═══════ */
+function updateUI(){
+  const idle=S.globalStatus==='idle';
+  document.getElementById('emptyState').style.display=idle?'block':'none';
+  document.getElementById('reportArea').style.display=idle?'none':'block';
+  if(idle){renderHistory();return;}
+  document.getElementById('reportName').textContent=S.customerName;
+  document.getElementById('reportDate').textContent=new Date().toLocaleDateString('nb-NO',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const done=SECTIONS.filter(s=>S.statuses[s.key]==='done'||S.statuses[s.key]==='error').length;
+  document.getElementById('progressFill').style.width=`${(done/SECTIONS.length)*100}%`;
+  document.getElementById('progressText').textContent=`${done}/${SECTIONS.length}`;
+  document.getElementById('completeBadge').style.display=done===SECTIONS.length?'inline':'none';
+
+  // Sidebar
+  let sb='';
+  SECTIONS.forEach(s=>{const a=S.active===s.key,st=S.statuses[s.key];let r='';if(st==='loading')r=`<span class="spinner" style="width:9px;height:9px"></span>`;else if(st==='done')r=`<span style="color:#10b981;font-weight:700;font-size:10px">✓</span>`;else if(st==='error')r=`<span style="color:#ef4444;font-weight:700;font-size:10px">✗</span>`;sb+=`<button class="nav-btn${a?' active':''}" onclick="navigateTo('${s.key}')" style="${a?`border-left-color:${s.color}`:''}"><span style="font-size:11px">${s.icon}</span><span style="flex:1">${s.label}</span>${r}</button>`;});
+  sb+=`<div class="nav-divider"></div>`;
+  if(S.sumStatus!=='idle'){const a=S.active==='summary';let r=S.sumStatus==='loading'?`<span class="spinner" style="width:9px;height:9px;border-top-color:var(--brand)"></span>`:S.sumStatus==='done'?`<span style="color:#10b981;font-weight:700;font-size:10px">✓</span>`:'';sb+=`<button class="nav-btn${a?' active':''}" onclick="navigateTo('summary')" style="${a?'border-left-color:var(--brand)':''}"><span style="font-size:11px">📌</span><span style="flex:1;color:var(--brand)">Oppsummering</span>${r}</button>`;}
+  sb+=`<button class="nav-btn${S.active==='bestpractice'?' active':''}" onclick="navigateTo('bestpractice')" style="${S.active==='bestpractice'?'border-left-color:var(--brand)':''}"><span style="font-size:11px">🤝</span><span style="flex:1">Beste Praksis</span></button>`;
+  document.getElementById('sidebar').innerHTML=sb;
+
+  // Content header
+  const keys=getNavKeys(),idx=keys.indexOf(S.active);
+  document.getElementById('prevBtn').disabled=idx<=0;
+  document.getElementById('nextBtn').disabled=idx>=keys.length-1;
+  const isDataSection=S.active!=='summary'&&S.active!=='bestpractice';
+  const retryBtn=document.getElementById('retryBtn');
+  retryBtn.style.display=isDataSection&&S.statuses[S.active]!=='loading'?'flex':'none';
+  retryBtn.style.color=S.statuses[S.active]==='error'?'#ef4444':'var(--muted)';
+  let title='';if(S.active==='summary')title='📌 Oppsummering & Handlingsplan';else if(S.active==='bestpractice')title='🤝 Beste Praksis — Relasjonsbygging';else{const sec=SECTIONS.find(s=>s.key===S.active);title=sec?`${sec.icon} ${sec.label}`:'';}
+  document.getElementById('contentTitle').textContent=title;
+
+  // Content body
+  let body='';
+  if(S.active==='bestpractice')body=renderBestPractice();
+  else if(S.active==='summary'){if(S.sumStatus==='loading')body=`<div class="loading-center"><div class="spinner" style="width:22px;height:22px;border-width:3px"></div><div class="loading-text">Analyserer funn...</div></div>`;else body=renderSummary();}
+  else{const st=S.statuses[S.active];if(st==='loading')body=`<div class="loading-center"><div class="spinner" style="width:22px;height:22px;border-width:3px"></div><div class="loading-text">Søker ${(SECTIONS.find(s=>s.key===S.active)?.label||'').toLowerCase()}...</div></div>`;else if(st==='error')body=`<div class="error-box"><strong>Feil:</strong> ${esc(S.results[S.active])}<div style="margin-top:10px"><button class="error-box retry-inline" onclick="retryActive()">🔄 Prøv å generere på nytt</button></div></div>`;else if(st==='done')body=renderSection(S.active,S.results[S.active]);else body='<div style="color:var(--light);text-align:center;padding:30px;font-size:12px">Venter...</div>';}
+  document.getElementById('contentBody').innerHTML=body;
+  document.getElementById('bottomBar').style.display=(S.active!=='bestpractice'&&S.active!=='summary'&&S.summary)?'flex':'none';
+  renderHistory();
+}
+
+function navigateTo(k){S.active=k;updateUI();}
+function navPrev(){const k=getNavKeys(),i=k.indexOf(S.active);if(i>0){S.active=k[i-1];updateUI();}}
+function navNext(){const k=getNavKeys(),i=k.indexOf(S.active);if(i<k.length-1){S.active=k[i+1];updateUI();}}
+
+/* ═══════ RETRY SECTION ═══════ */
+async function retryActive(){
+  const key=S.active;const sec=SECTIONS.find(s=>s.key===key);
+  if(!sec||!S.customerName)return;
+  S.statuses[key]='loading';delete S.results[key];updateUI();
+  try{
+    const ctrl=new AbortController();const text=await callAPI(S.customerName,sec,ctrl.signal);
+    S.results[key]=text;S.statuses[key]='done';
+    try{const sk=`tb_analyse:${S.customerName.toLowerCase().replace(/[^a-zæøå0-9]/g,'-')}`;const ex=localStorage.getItem(sk);if(ex){const e=JSON.parse(ex);e.results[key]=text;localStorage.setItem(sk,JSON.stringify(e));}}catch{}
+  }catch(err){if(err.name==='AbortError')return;S.results[key]=err.message;S.statuses[key]='error';}
+  updateUI();
+}
+
+/* ═══════ MODAL ═══════ */
+function showModal(type){const d=S.summary;if(!d)return;document.getElementById('modalTitle').textContent=type==='email'?`✉️ E-postutkast — ${S.customerName}`:`📞 Ringemanus — ${S.customerName}`;document.getElementById('modalContent').textContent=((type==='email'?d.epost:d.telefon)||'Ikke tilgjengelig').replace(/\\n/g,'\n');document.getElementById('modalOverlay').style.display='flex';}
+function closeModal(){document.getElementById('modalOverlay').style.display='none';}
+function copyModal(){navigator.clipboard?.writeText(document.getElementById('modalContent').textContent);const b=document.getElementById('copyBtn');b.textContent='✅ Kopiert!';setTimeout(()=>b.textContent='📋 Kopier til utklippstavle',2000);}
+
+/* ═══════ SEARCH ═══════ */
+async function startSearch(){
+  const name=document.getElementById('searchInput').value.trim();
+  if(!name||!getApiKey()){if(!getApiKey())alert('Legg inn API-nøkkel først');return;}
+  if(S.abortCtrl)S.abortCtrl.abort();const ctrl=new AbortController();S.abortCtrl=ctrl;
+  S.customerName=name;S.results={};S.summary=null;S.sumStatus='idle';S.statuses=SECTIONS.reduce((a,s)=>({...a,[s.key]:'loading'}),{});S.globalStatus='loading';S.active=SECTIONS[0].key;
+  document.getElementById('searchBtn').disabled=true;document.getElementById('searchBtn').textContent='Analyserer...';updateUI();
+  const all={};
+  for(let i=0;i<SECTIONS.length;i+=3){if(ctrl.signal.aborted)return;const batch=SECTIONS.slice(i,i+3);await Promise.allSettled(batch.map(async sec=>{try{const text=await callAPI(name,sec,ctrl.signal);all[sec.key]=text;S.results[sec.key]=text;S.statuses[sec.key]='done';}catch(err){if(err.name==='AbortError')return;S.results[sec.key]=err.message;S.statuses[sec.key]='error';}updateUI();}));if(i+3<SECTIONS.length&&!ctrl.signal.aborted)await new Promise(r=>setTimeout(r,500));}
+  if(ctrl.signal.aborted)return;S.globalStatus='done';
+  let parsed=null;S.sumStatus='loading';updateUI();
+  for(let a=0;a<2&&!parsed;a++){if(ctrl.signal.aborted)return;try{if(a>0)await new Promise(r=>setTimeout(r,1000));parsed=tryParse(await callSummary(name,all,ctrl.signal));}catch(e){console.error('Sum attempt',a+1,e);}}
+  if(parsed){S.summary=parsed;S.sumStatus='done';S.active='summary';}else S.sumStatus='error';
+  document.getElementById('searchBtn').disabled=false;document.getElementById('searchBtn').textContent='Generer rapport';updateUI();
+  const saveKey=`tb_analyse:${name.toLowerCase().replace(/[^a-zæøå0-9]/g,'-')}`;
+  try{localStorage.setItem(saveKey,JSON.stringify({name,timestamp:new Date().toISOString(),results:all,summary:parsed}));let idx=JSON.parse(localStorage.getItem('tb_index')||'[]');idx=idx.filter(i=>i.key!==saveKey);idx.unshift({key:saveKey,name,timestamp:new Date().toISOString()});if(idx.length>20)idx=idx.slice(0,20);localStorage.setItem('tb_index',JSON.stringify(idx));}catch(e){console.error(e);}renderHistory();
+}
+
+/* ═══════ HISTORY ═══════ */
+function getHist(){try{return JSON.parse(localStorage.getItem('tb_index')||'[]')}catch{return[];}}
+function renderHistory(){
+  const h=getHist(),el=document.getElementById('historyArea');if(!h.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="history-section"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><span style="font-size:16px">📂</span><span style="font-size:14px;font-weight:700">Siste analyser</span><span style="font-size:11px;color:var(--light)">(${h.length})</span></div><div class="history-grid">${h.map(x=>{const dt=new Date(x.timestamp).toLocaleDateString('nb-NO',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});const act=S.customerName===x.name&&S.globalStatus==='done';return`<div class="history-card${act?' active':''}" onclick="${act?'':`loadHist('${x.key}')`}"><div class="icon-box">${act?'✓':'🏢'}</div><div style="flex:1;min-width:0"><div class="hname">${esc(x.name)}</div><div class="hdate">${dt}</div></div><button class="history-delete" onclick="event.stopPropagation();delHist('${x.key}')" title="Slett">🗑</button></div>`;}).join('')}</div></div>`;
+}
+function loadHist(key){try{const d=JSON.parse(localStorage.getItem(key));if(!d)return;S.customerName=d.name;S.results=d.results||{};S.statuses=SECTIONS.reduce((a,s)=>({...a,[s.key]:d.results?.[s.key]?'done':'error'}),{});S.globalStatus='done';S.active='summary';document.getElementById('searchInput').value=d.name;if(d.summary){S.summary=d.summary;S.sumStatus='done';}else{S.summary=null;S.sumStatus='error';}updateUI();}catch(e){console.error(e);}}
+function delHist(key){localStorage.removeItem(key);let idx=getHist().filter(h=>h.key!==key);localStorage.setItem('tb_index',JSON.stringify(idx));renderHistory();}
+
+/* ═══════ INIT ═══════ */
+updateApiDot();renderHistory();
+</script>
+</body>
+</html>
